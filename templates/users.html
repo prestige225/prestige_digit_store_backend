@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 2rem;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+
+button {
+    background-color: #3498db;
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin: 0 0.5rem 1.5rem 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+#usersList {
+    list-style: none;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: white;
+}
+
+#usersList li {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#usersList li:last-child {
+    border-bottom: none;
+}
+
+#usersList li::before {
+    content: '👤';
+    margin-right: 0.8rem;
+}
+
+.online-status {
+    font-weight: 700;
+    color: #27ae60; /* vert pour en ligne */
+}
+
+.offline-status {
+    font-weight: 700;
+    color: #c0392b; /* rouge pour hors ligne */
+}
+
+</style>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Utilisateurs</title>
+</head>
+<body>
+    <h1>Liste des utilisateurs</h1>
+
+    <button id="btnAllUsers">Tous les utilisateurs</button>
+    <button id="btnConnectedUsers">Utilisateurs connectés</button>
+
+    <ul id="usersList"></ul>
+
+    <script>
+        const usersList = document.getElementById('usersList');
+
+        // Fonction pour afficher la liste dans le DOM
+        function displayUsers(users) {
+            usersList.innerHTML = ''; // Vide la liste avant affichage
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = `${user.name} (${user.email}) - En ligne : ${user.is_online === 1 ? 'Oui' : 'Non'}`;
+                usersList.appendChild(li);
+            });
+        }
+
+        // Récupérer tous les utilisateurs
+        async function fetchAllUsers() {
+            try {
+                const res = await fetch('http://127.0.0.1:3000/api/users', {
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error('Erreur API');
+                const data = await res.json();
+                displayUsers(data.users);
+            } catch (err) {
+                alert('Erreur lors de la récupération des utilisateurs');
+                console.error(err);
+            }
+        }
+
+        // Récupérer les utilisateurs connectés
+        async function fetchConnectedUsers() {
+            try {
+                const res = await fetch('http://127.0.0.1:3000/api/users/connected', {
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error('Erreur API');
+                const data = await res.json();
+                // Les utilisateurs connectés n'ont pas le champ is_online dans la réponse,
+                // on peut les afficher simplement
+                usersList.innerHTML = '';
+                data.connected_users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = `${user.name} (${user.email}) - En ligne : Oui`;
+                    usersList.appendChild(li);
+                });
+            } catch (err) {
+                alert('Erreur lors de la récupération des utilisateurs connectés');
+                console.error(err);
+            }
+        }
+
+        document.getElementById('btnAllUsers').addEventListener('click', fetchAllUsers);
+        document.getElementById('btnConnectedUsers').addEventListener('click', fetchConnectedUsers);
+
+        // Optionnel : charger tous les utilisateurs au chargement de la page
+        fetchAllUsers();
+
+
+        function displayUsers(users) {
+    usersList.innerHTML = ''; 
+    users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `${user.name} (${user.email}) `;
+
+        const status = document.createElement('span');
+        if (user.is_online === 1 || user.is_online === true) {
+            status.textContent = 'En ligne';
+            status.classList.add('online-status');
+        } else {
+            status.textContent = 'Hors ligne';
+            status.classList.add('offline-status');
+        }
+
+        li.appendChild(status);
+        usersList.appendChild(li);
+    });
+}
+
+    </script>
+</body>
+</html>

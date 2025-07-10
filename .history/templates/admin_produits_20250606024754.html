@@ -1,0 +1,78 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Produits</title>
+</head>
+<body>
+  <h1>Ajouter un produit</h1>
+  <form id="formProduit">
+    <input type="text" id="nom" placeholder="Nom" required><br>
+    <input type="text" id="description" placeholder="Description"><br>
+    <input type="number" id="prix" placeholder="Prix" required><br>
+    <input type="text" id="categorie" placeholder="Catégorie"><br>
+    <input type="number" id="stock" placeholder="Stock"><br>
+    <input type="text" id="images" placeholder="image1.jpg,image2.jpg"><br>
+    <button type="submit">Ajouter</button>
+  </form>
+
+  <h2>Liste des produits</h2>
+  <div id="listeProduits"></div>
+
+  <script>
+    // Charger les produits
+    function chargerProduits() {
+      fetch('http://localhost:3000/api/admin/produits')
+        .then(res => res.json())
+        .then(produits => {
+          const conteneur = document.getElementById('listeProduits');
+          conteneur.innerHTML = '';
+          produits.forEach(p => {
+            const bloc = document.createElement('div');
+            bloc.innerHTML = `
+              <h3>${p.nom}</h3>
+              <p>${p.description}</p>
+              <p>Prix: ${p.prix} FCFA</p>
+              <p>Catégorie: ${p.categorie}</p>
+              <p>Stock: ${p.stock}</p>
+              ${p.images.map(img => `<img src="${img}" width="100">`).join('')}
+              <hr>
+            `;
+            conteneur.appendChild(bloc);
+          });
+        })
+        .catch(err => {
+          console.error('Erreur de chargement des produits :', err);
+        });
+    }
+
+    // Soumettre un nouveau produit
+    document.getElementById('formProduit').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = {
+        nom: document.getElementById('nom').value,
+        description: document.getElementById('description').value,
+        prix: parseFloat(document.getElementById('prix').value),
+        categorie: document.getElementById('categorie').value,
+        stock: parseInt(document.getElementById('stock').value),
+        images: document.getElementById('images').value.split(',')
+      };
+      fetch('http://localhost:3000/api/admin/produits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(msg => {
+        alert(msg.message);
+        chargerProduits();
+      })
+      .catch(err => console.error('Erreur ajout produit :', err));
+    });
+
+    // Charger produits au chargement
+    window.onload = chargerProduits;
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Messages</title>
+  <style>
+    /* [CSS inchangé - Tu peux garder le tien] */
+  </style>
+</head>
+<body>
+
+  <h2>Envoyer un message à un utilisateur</h2>
+  <form id="adminSendForm">
+    <input type="text" id="sendName" placeholder="Nom de l'expéditeur" value="Admin" required>
+    <input type="email" id="sendEmail" placeholder="Email de l'utilisateur" required>
+    <textarea id="sendMessage" placeholder="Votre message..." required></textarea>
+    <button type="submit">Envoyer</button>
+    <p id="sendFeedback"></p>
+  </form>
+
+  <h1>Historique des messages</h1>
+  <p id="feedback" class="error"></p>
+
+  <table id="messagesTable">
+    <thead>
+      <tr>
+        <th>Expéditeur</th>
+        <th>Destinataire</th>
+        <th>Message</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Les messages seront chargés ici -->
+    </tbody>
+  </table>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api/messages';
+
+    // Formulaire d’envoi de message par l’admin
+    document.getElementById('adminSendForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById('sendName').value.trim();
+      const email = document.getElementById('sendEmail').value.trim();
+      const message = document.getElementById('sendMessage').value.trim();
+      const feedback = document.getElementById('sendFeedback');
+
+      if (!name || !email || !message) {
+        feedback.textContent = "Tous les champs sont obligatoires.";
+        feedback.style.color = "red";
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            message,
+            sender: 'admin'
+          })
+        });
+
+        if (!res.ok) throw new Error("Erreur lors de l'envoi");
+
+        const result = await res.json();
+        feedback.textContent = result.message || "Message envoyé.";
+        feedback.style.color = "green";
+        document.getElementById('adminSendForm').reset();
+
+        loadMessages();
+      } catch (err) {
+        feedback.textContent = err.message;
+        feedback.style.color = "red";
+      }
+    });
+
+    // Fonction pour charger tous les messages
+    async function loadMessages() {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = '';
+      const tbody = document.querySelector('#messagesTable tbody');
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error("Erreur lors du chargement des messages");
+        const data = await res.json();
+
+        if (data.length === 0) {
+          feedback.textContent = "Aucun message pour le moment.";
+          return;
+        }
+
+        data.forEach(msg => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${msg.sender === 'admin' ? 'Admin' : msg.name}</td>
+            <td>${msg.email}</td>
+            <td>${msg.message}</td>
+            <td>${new Date(msg.created_at).toLocaleString()}</td>
+            <td><button class="delete-btn" data-id="${msg.id}">Supprimer</button></td>
+          `;
+
+          tr.querySelector('.delete-btn').addEventListener('click', async () => {
+            if (!confirm("Confirmer la suppression ?")) return;
+            try {
+              const res = await fetch(`${API_BASE}/${msg.id}`, {
+                method: 'DELETE'
+              });
+              if (!res.ok) throw new Error("Erreur suppression");
+              loadMessages();
+              feedback.textContent = "Message supprimé.";
+              feedback.className = "success";
+            } catch (err) {
+              alert(err.message);
+            }
+          });
+
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error(err);
+        feedback.textContent = "Erreur lors du chargement.";
+      }
+    }
+
+    loadMessages();
+  </script>
+</body>
+</html>

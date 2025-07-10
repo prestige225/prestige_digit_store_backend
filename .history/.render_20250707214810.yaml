@@ -1,0 +1,16 @@
+
+services:
+  - type: web
+    name: prestige-store-backend
+    runtime: python
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: DB_HOST
+        value: ton_hôte_mysql
+      - key: DB_USER
+        value: ton_utilisateur
+      - key: DB_PASSWORD
+        value: ton_mot_de_passe
+      - key: DB_NAME
+        value: nom_base

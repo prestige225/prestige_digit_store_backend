@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Gestion des avis</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #f8f9fa;
+      color: #333;
+    }
+    h1 {
+      color: #00796b;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #00796b;
+      color: white;
+    }
+    tr:hover {
+      background-color: #e0f2f1;
+    }
+    button.delete-btn {
+      background-color: #d32f2f;
+      border: none;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button.delete-btn:hover {
+      background-color: #9a0007;
+    }
+    @media(max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      tr {
+        margin-bottom: 15px;
+      }
+      th {
+        display: none;
+      }
+      td {
+        position: relative;
+        padding-left: 50%;
+        border-bottom: 1px solid #ccc;
+      }
+      td::before {
+        position: absolute;
+        top: 12px;
+        left: 15px;
+        width: 45%;
+        white-space: nowrap;
+        font-weight: 600;
+        color: #00796b;
+      }
+      td:nth-of-type(1)::before { content: "Nom"; }
+      td:nth-of-type(2)::before { content: "Note"; }
+      td:nth-of-type(3)::before { content: "Commentaire"; }
+      td:nth-of-type(4)::before { content: "Date"; }
+      td:nth-of-type(5)::before { content: "Actions"; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Administration des avis utilisateurs</h1>
+
+  <table id="avisTable">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Note</th>
+        <th>Commentaire</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Les avis seront insérés ici en JS -->
+    </tbody>
+  </table>
+
+  <script>
+    const avisTableBody = document.querySelector('#avisTable tbody');
+
+    async function chargerAvis() {
+      try {
+        const res = await fetch('http://localhost:3000/api/avis');
+        const avisList = await res.json();
+        if (!Array.isArray(avisList) || avisList.length === 0) {
+          avisTableBody.innerHTML = '<tr><td colspan="5">Aucun avis trouvé.</td></tr>';
+          return;
+        }
+
+        avisTableBody.innerHTML = avisList.map(avis => `
+          <tr data-id="${avis.id}">
+            <td>${avis.nom}</td>
+            <td>${avis.note}</td>
+            <td>${avis.commentaire}</td>
+            <td>${new Date(avis.date_post).toLocaleString()}</td>
+            <td><button class="delete-btn" onclick="supprimerAvis(${avis.id})">Supprimer</button></td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        avisTableBody.innerHTML = '<tr><td colspan="5">Erreur lors du chargement des avis.</td></tr>';
+        console.error('Erreur:', error);
+      }
+    }
+
+    async function supprimerAvis(id) {
+      if (!confirm('Confirmez-vous la suppression de cet avis ?')) return;
+      try {
+        const res = await fetch(`http://localhost:3000/api/avis/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          alert('Avis supprimé avec succès.');
+          chargerAvis();
+        } else {
+          alert('Erreur lors de la suppression.');
+        }
+      } catch (error) {
+        alert('Erreur réseau.');
+        console.error(error);
+      }
+    }
+
+    chargerAvis();
+  </script>
+
+</body>
+</html>

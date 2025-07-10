@@ -1,0 +1,68 @@
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f9f9;
+    margin: 0;
+    padding: 2rem;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 1.5rem;
+}
+
+button {
+    background-color: #3498db;
+    border: none;
+    color: white;
+    padding: 0.6rem 1.2rem;
+    margin: 0 0.5rem 1.5rem 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+#usersList {
+    list-style: none;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: white;
+}
+
+#usersList li {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid #eee;
+    font-size: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#usersList li:last-child {
+    border-bottom: none;
+}
+
+#usersList li::before {
+    content: '👤';
+    margin-right: 0.8rem;
+}
+
+.online-status {
+    font-weight: 700;
+    color: #27ae60; /* vert pour en ligne */
+}
+
+.offline-status {
+    font-weight: 700;
+    color: #c0392b; /* rouge pour hors ligne */
+}

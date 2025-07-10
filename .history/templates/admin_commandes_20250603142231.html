@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Commandes - Admin</title>
+    <link rel="stylesheet" href="/static/css/admin.css">
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f6fa;
+    margin: 0;
+    padding: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+.commandes {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.commande {
+    background-color: #ffffff;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    border-left: 5px solid #3498db;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 8px;
+}
+
+.commande h3 {
+    margin-top: 0;
+    color: #2980b9;
+}
+
+.commande p {
+    margin: 4px 0;
+}
+
+.produits ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+    </style>
+</head>
+<body>
+    <h1>📦 Liste des Commandes</h1>
+    <div class="commandes">
+        {% for commande in commandes %}
+            <div class="commande">
+                <h3>Commande #{{ commande.id }} – {{ commande.client_nom }}</h3>
+                <p><strong>Email :</strong> {{ commande.client_email or 'N/A' }}</p>
+                <p><strong>Téléphone :</strong> {{ commande.client_telephone or 'N/A' }}</p>
+                <p><strong>Adresse :</strong> {{ commande.client_adress_de_livraison or 'N/A' }}</p>
+                <p><strong>Statut :</strong> {{ commande.statut }}</p>
+                <p><strong>Date :</strong> {{ commande.date_commande.strftime('%d/%m/%Y %H:%M') }}</p>
+                <p><strong>Méthode de paiement :</strong> {{ commande.methode_paiement or 'Non précisée' }}</p>
+                <p><strong>Total :</strong> {{ commande.total }} FCFA</p>
+
+                <div class="produits">
+                    <h4>🛒 Produits commandés :</h4>
+                    <ul>
+                        {% for produit in commande.produits %}
+                            <li>
+                                {{ produit.nom }} – {{ produit.quantite }} × {{ produit.prix }} FCFA
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

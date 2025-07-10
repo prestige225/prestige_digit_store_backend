@@ -1,0 +1,18 @@
+
+services:
+  - type: web
+    name: prestige-digit-store-backend
+    runtime: python
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: DB_HOST
+        value: b3boiqle4acevw9dwxnj-mysql.services.clever-cloud.com
+      - key: DB_USER
+        value: un4elnqqcku8i4kg
+      - key: DB_PASSWORD
+        value: lWgyC4mYMB4azo2wgKk4
+      - key: DB_NAME
+        value: b3boiqle4acevw9dwxnj
+      - key: DB_PORT
+        value: "3306"

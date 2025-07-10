@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commandes | Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .commande {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 15px auto;
+      max-width: 800px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .commande h3 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #2c3e50;
+    }
+    .commande p {
+      margin: 5px 0;
+      color: #555;
+    }
+    .produits {
+      margin-top: 10px;
+      padding-left: 20px;
+    }
+    .produits li {
+      margin-bottom: 4px;
+      color: #444;
+    }
+    .total {
+      font-weight: bold;
+      color: #e74c3c;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Liste des Commandes</h1>
+  <div id="commandesContainer"></div>
+
+  <script>
+    // Chargement des commandes depuis l'API
+    fetch("http://127.0.0.1:3000/admin/commandes")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Erreur lors du chargement des commandes.");
+        }
+        return response.json();
+      })
+      .then(commandes => {
+        const container = document.getElementById("commandesContainer");
+        if (commandes.length === 0) {
+          container.innerHTML = "<p>Aucune commande trouvée.</p>";
+          return;
+        }
+
+        commandes.forEach(cmd => {
+          const commandeEl = document.createElement("div");
+          commandeEl.className = "commande";
+          commandeEl.innerHTML = `
+            <h3>Commande #${cmd.id} - ${cmd.nom}</h3>
+            <p><strong>Email :</strong> ${cmd.email}</p>
+            <p><strong>Téléphone :</strong> ${cmd.telephone}</p>
+            <p><strong>Adresse :</strong> ${cmd.adresse}</p>
+            <p><strong>Date :</strong> ${cmd.date}</p>
+            <ul class="produits">
+              ${cmd.produits.map(p => `<li>${p.nom} - ${p.quantite} x ${p.prix} FCFA</li>`).join("")}
+            </ul>
+            <p class="total">Total : ${cmd.total} FCFA</p>
+          `;
+          container.appendChild(commandeEl);
+        });
+      })
+      .catch(error => {
+        document.getElementById("commandesContainer").innerHTML = `<p style="color:red;">${error.message}</p>`;
+      });
+  </script>
+</body>
+</html>

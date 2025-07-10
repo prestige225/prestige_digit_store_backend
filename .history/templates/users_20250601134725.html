@@ -1,0 +1,148 @@
+
+<!-- <!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Utilisateurs inscrits et connectés</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 2rem; background: #f5f5f5; }
+  h2 { color: #333; }
+  table { border-collapse: collapse; width: 100%; max-width: 600px; margin-bottom: 2rem; background: white; }
+  th, td { padding: 0.75rem 1rem; border: 1px solid #ddd; text-align: left; }
+  th { background: #2c3e50; color: white; }
+</style>
+</head>
+<body>
+  <h2>Utilisateurs inscrits</h2>
+  <table id="users-table">
+    <thead>
+      <tr><th>Nom</th><th>Email</th><th>Connecté</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Utilisateurs connectés</h2>
+  <table id="connected-users-table">
+    <thead>
+      <tr><th>Nom</th><th>Email</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+<script>
+  // Récupère et affiche tous les utilisateurs
+  function loadUsers() {
+    fetch('http://127.0.0.1:3000/api/users')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#users-table tbody');
+        tbody.innerHTML = '';
+        data.users.forEach(user => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td><td>${user.is_online ? 'Oui' : 'Non'}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  // Récupère et affiche les utilisateurs connectés
+  function loadConnectedUsers() {
+    fetch('http://127.0.0.1:3000/api/users/connected')
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector('#connected-users-table tbody');
+        tbody.innerHTML = '';
+        data.connected_users.forEach(user => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${user.name}</td><td>${user.email}</td>`;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  function refresh() {
+    loadUsers();
+    loadConnectedUsers();
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    refresh();
+    // Rafraîchir toutes les 30 secondes
+    setInterval(refresh, 30000);
+  });
+</script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Utilisateurs</title>
+</head>
+<body>
+    <h1>Liste des utilisateurs</h1>
+
+    <button id="btnAllUsers">Tous les utilisateurs</button>
+    <button id="btnConnectedUsers">Utilisateurs connectés</button>
+
+    <ul id="usersList"></ul>
+
+    <script>
+        const usersList = document.getElementById('usersList');
+
+        // Fonction pour afficher la liste dans le DOM
+        function displayUsers(users) {
+            usersList.innerHTML = ''; // Vide la liste avant affichage
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = `${user.name} (${user.email}) - En ligne : ${user.is_online === 1 ? 'Oui' : 'Non'}`;
+                usersList.appendChild(li);
+            });
+        }
+
+        // Récupérer tous les utilisateurs
+        async function fetchAllUsers() {
+            try {
+                const res = await fetch('http://127.0.0.1:3000/api/users', {
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error('Erreur API');
+                const data = await res.json();
+                displayUsers(data.users);
+            } catch (err) {
+                alert('Erreur lors de la récupération des utilisateurs');
+                console.error(err);
+            }
+        }
+
+        // Récupérer les utilisateurs connectés
+        async function fetchConnectedUsers() {
+            try {
+                const res = await fetch('http://127.0.0.1:3000/api/users/connected', {
+                    credentials: 'include'
+                });
+                if (!res.ok) throw new Error('Erreur API');
+                const data = await res.json();
+                // Les utilisateurs connectés n'ont pas le champ is_online dans la réponse,
+                // on peut les afficher simplement
+                usersList.innerHTML = '';
+                data.connected_users.forEach(user => {
+                    const li = document.createElement('li');
+                    li.textContent = `${user.name} (${user.email}) - En ligne : Oui`;
+                    usersList.appendChild(li);
+                });
+            } catch (err) {
+                alert('Erreur lors de la récupération des utilisateurs connectés');
+                console.error(err);
+            }
+        }
+
+        document.getElementById('btnAllUsers').addEventListener('click', fetchAllUsers);
+        document.getElementById('btnConnectedUsers').addEventListener('click', fetchConnectedUsers);
+
+        // Optionnel : charger tous les utilisateurs au chargement de la page
+        fetchAllUsers();
+    </script>
+</body>
+</html>

@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Prestige Digit School Store - Authentification</title>
+</head>
+<body>
+  <h1>Inscription</h1>
+  <form id="registerForm">
+    <input type="text" id="registerName" placeholder="Nom complet" required />
+    <input type="email" id="registerEmail" placeholder="Email" required />
+    <input type="password" id="registerPassword" placeholder="Mot de passe" required />
+    <button type="submit">S'inscrire</button>
+  </form>
+  <div id="registerMsg"></div>
+
+  <h1>Connexion</h1>
+  <form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" required />
+    <input type="password" id="loginPassword" placeholder="Mot de passe" required />
+    <button type="submit">Se connecter</button>
+  </form>
+  <div id="loginMsg"></div>
+
+  <h2>Profil utilisateur</h2>
+  <button id="getProfileBtn">Afficher mon profil</button>
+  <div id="profileInfo"></div>
+
+<script>
+  const registerForm = document.getElementById('registerForm');
+  const registerMsg = document.getElementById('registerMsg');
+  const loginForm = document.getElementById('loginForm');
+  const loginMsg = document.getElementById('loginMsg');
+  const getProfileBtn = document.getElementById('getProfileBtn');
+  const profileInfo = document.getElementById('profileInfo');
+
+  registerForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    registerMsg.textContent = '';
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      registerMsg.textContent = data.message;
+      if (res.ok) {
+        registerForm.reset();
+      }
+    } catch (err) {
+      registerMsg.textContent = 'Erreur réseau.';
+      console.error(err);
+    }
+  });
+
+  loginForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    loginMsg.textContent = '';
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok && data.user) {
+        loginMsg.textContent = `Connecté : ${data.user.name} (${data.user.email})`;
+        loginForm.reset();
+      } else {
+        loginMsg.textContent = data.message || 'Erreur de connexion';
+      }
+    } catch (err) {
+      loginMsg.textContent = 'Erreur réseau.';
+      console.error(err);
+    }
+  });
+
+  getProfileBtn.addEventListener('click', async () => {
+    profileInfo.textContent = '';
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok) {
+        profileInfo.textContent = `Nom : ${data.name}, Email : ${data.email}`;
+      } else {
+        profileInfo.textContent = data.message || 'Non connecté';
+      }
+    } catch (err) {
+      profileInfo.textContent = 'Erreur réseau.';
+      console.error(err);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Produits</title>
+  <style>
+    .produit {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    img {
+      max-width: 100px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Liste des Produits (Admin)</h1>
+  <div id="produitsContainer">Chargement...</div>
+
+  <script>
+    fetch("http://localhost:3000/api/admin/produits")
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Erreur lors de la récupération");
+        }
+        return res.json();
+      })
+      .then(data => {
+        const container = document.getElementById("produitsContainer");
+        container.innerHTML = "";
+
+        if (data.length === 0) {
+          container.innerHTML = "<p>Aucun produit trouvé.</p>";
+          return;
+        }
+
+        data.forEach(p => {
+          const div = document.createElement("div");
+          div.className = "produit";
+          div.innerHTML = `
+            <h3>${p.nom}</h3>
+            <p>${p.description}</p>
+            <p>Prix : ${p.prix} FCFA</p>
+            <p>Stock : ${p.stock}</p>
+            <p>Catégorie : ${p.categorie}</p>
+            <div>
+              ${p.images.map(img => `<img src="${img}" alt="Image de ${p.nom}">`).join("")}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(err => {
+        console.error("Erreur :", err);
+        document.getElementById("produitsContainer").innerText = "Erreur de chargement des produits.";
+      });
+  </script>
+</body>
+</html>

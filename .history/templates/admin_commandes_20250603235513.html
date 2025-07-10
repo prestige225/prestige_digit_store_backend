@@ -1,0 +1,60 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Commandes</title>
+  <style>
+    .commande {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .produits li {
+      list-style: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Liste des commandes</h1>
+<div id="commandesContainer"></div>
+
+<script>
+fetch("http://127.0.0.1:3000/api/admin/commandes")
+  .then(res => res.json())
+  .then(commandes => {
+    const container = document.getElementById("commandesContainer");
+    container.innerHTML = "";
+
+    if (commandes.length === 0) {
+      container.innerHTML = "<p>Aucune commande trouvée.</p>";
+      return;
+    }
+
+    commandes.forEach(cmd => {
+      const commandeEl = document.createElement("div");
+      commandeEl.className = "commande";
+      commandeEl.innerHTML = `
+        <h3>Commande #${cmd.id} - ${cmd.client_nom}</h3>
+        <p><strong>Email :</strong> ${cmd.client_email}</p>
+        <p><strong>Téléphone :</strong> ${cmd.client_telephone}</p>
+        <p><strong>Méthode de paiement :</strong> ${cmd.methode_paiement}</p>
+        <p><strong>Statut :</strong> ${cmd.statut}</p>
+        <p><strong>Date :</strong> ${cmd.date_commande}</p>
+        <ul class="produits">
+          ${cmd.produits.map(p => `<li>${p.nom} - ${p.quantite} x ${p.prix} FCFA</li>`).join("")}
+        </ul>
+        <p class="total">Total : ${cmd.total} FCFA</p>
+      `;
+      container.appendChild(commandeEl);
+    });
+  })
+  .catch(err => {
+    document.getElementById("commandesContainer").innerHTML = `<p style="color:red;">${err.message}</p>`;
+  });
+</script>
+
+
+</body>
+</html>

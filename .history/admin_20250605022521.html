@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Page Admin - Messages reçus</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f4f4f4; }
+  </style>
+</head>
+<body>
+
+<h1>Messages reçus</h1>
+
+<table id="messagesTable">
+  <thead>
+    <tr>
+      <th>Nom</th>
+      <th>Email</th>
+      <th>Message</th>
+      <th>Envoyé le</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- Les messages seront insérés ici -->
+  </tbody>
+</table>
+
+<script>
+  // Fonction pour charger les messages depuis le backend
+  async function loadMessages() {
+    try {
+      const response = await fetch('/api/messages/all');
+      if (!response.ok) {
+        throw new Error('Erreur lors de la récupération des messages');
+      }
+      const messages = await response.json();
+
+      const tbody = document.querySelector('#messagesTable tbody');
+      tbody.innerHTML = ''; // vide le tableau
+
+      messages.forEach(msg => {
+        const tr = document.createElement('tr');
+
+        tr.innerHTML = `
+          <td>${msg.name}</td>
+          <td>${msg.email}</td>
+          <td>${msg.message}</td>
+          <td>${msg.created_at}</td>
+        `;
+
+        tbody.appendChild(tr);
+      });
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  // Chargement au démarrage de la page
+  window.onload = loadMessages;
+</script>
+
+</body>
+</html>

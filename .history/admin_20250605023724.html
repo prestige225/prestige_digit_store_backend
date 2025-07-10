@@ -1,0 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Messages reçus</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+    }
+
+    th, td {
+      padding: 1rem;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Messages des utilisateurs</h1>
+  <p id="error" class="error"></p>
+
+  <table id="messagesTable">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Message</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Les messages seront insérés ici -->
+    </tbody>
+  </table>
+
+  <script>
+    fetch('http://localhost:3000/api/messages')
+      .then(res => {
+        if (!res.ok) throw new Error('Erreur lors du chargement des messages');
+        return res.json();
+      })
+      .then(data => {
+        const tbody = document.querySelector('#messagesTable tbody');
+
+        if (data.length === 0) {
+          document.getElementById('error').textContent = 'Aucun message trouvé.';
+          return;
+        }
+
+        data.forEach(msg => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${msg.name}</td>
+            <td>${msg.email}</td>
+            <td>${msg.message}</td>
+            <td>${new Date(msg.created_at).toLocaleString()}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('error').textContent = 'Impossible de charger les messages.';
+      });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Produits</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background-color: #f5f5f5;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .produit {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .images img {
+      width: 100px;
+      margin-right: 10px;
+      border-radius: 6px;
+    }
+    .images {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📦 Liste des Produits Postés</h1>
+  <div id="produits-container">Chargement...</div>
+
+  <script>
+    fetch('http://localhost:3000/api/admin/produits')
+      .then(res => res.json())
+      .then(produits => {
+        const container = document.getElementById('produits-container');
+        container.innerHTML = '';
+
+        produits.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'produit';
+
+          div.innerHTML = `
+            <h3>${p.nom}</h3>
+            <p><strong>Description:</strong> ${p.description}</p>
+            <p><strong>Prix:</strong> ${p.prix} FCFA</p>
+            <p><strong>Catégorie:</strong> ${p.categorie}</p>
+            <p><strong>Stock:</strong> ${p.stock}</p>
+            <div class="images">
+              ${(p.images || []).map(img => `<img src="/static/image/produits/${img}" alt="">`).join('')}
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      })
+      .catch(error => {
+        console.error('Erreur :', error);
+        document.getElementById('produits-container').innerText = 'Erreur de chargement des produits.';
+      });
+  </script>
+
+</body>
+</html>

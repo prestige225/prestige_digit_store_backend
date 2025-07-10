@@ -1,0 +1,189 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Messages reçus</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      margin-bottom: 2rem;
+    }
+    th, td {
+      padding: 1rem;
+      border: 1px solid #ddd;
+      vertical-align: top;
+    }
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    textarea {
+      width: 100%;
+      min-height: 60px;
+      resize: vertical;
+      margin-top: 0.5rem;
+      font-family: inherit;
+    }
+    button {
+      margin-top: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: #007BFF;
+      border: none;
+      color: white;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: default;
+    }
+    .response {
+      background-color: #e0ffe0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      font-style: italic;
+      white-space: pre-wrap;
+    }
+    .date {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .success {
+      color: green;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Messages des utilisateurs</h1>
+  <p id="feedback" class="error"></p>
+
+  <table id="messagesTable">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Email</th>
+        <th>Message</th>
+        <th>Réponse</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Les messages seront insérés ici -->
+    </tbody>
+  </table>
+
+  <script>
+    const API_BASE = 'http://localhost:3000/api/messages';
+
+    async function loadMessages() {
+      const feedback = document.getElementById('feedback');
+      feedback.textContent = '';
+      try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error('Erreur lors du chargement des messages');
+        const data = await res.json();
+        const tbody = document.querySelector('#messagesTable tbody');
+        tbody.innerHTML = ''; // vider avant de remplir
+
+        if (data.length === 0) {
+          feedback.textContent = 'Aucun message trouvé.';
+          return;
+        }
+
+        data.forEach(msg => {
+          const tr = document.createElement('tr');
+
+          // Format date du message
+          const createdDate = new Date(msg.created_at).toLocaleString();
+
+          tr.innerHTML = `
+            <td>${msg.name}</td>
+            <td>${msg.email}</td>
+            <td>
+              ${msg.message}
+            </td>
+            <td>
+              ${msg.reply ? `
+                <div class="response">${msg.reply}</div>
+                <div class="date">Répondu le : ${new Date(msg.replied_at).toLocaleString()}</div>
+              ` : `
+                <textarea placeholder="Tapez votre réponse..."></textarea>
+                <button>Envoyer</button>
+              `}
+            </td>
+            <td>${createdDate}</td>
+          `;
+
+          if (!msg.reply) {
+            const textarea = tr.querySelector('textarea');
+            const button = tr.querySelector('button');
+
+            button.addEventListener('click', async () => {
+              const replyText = textarea.value.trim();
+              if (!replyText) {
+                alert('Veuillez écrire une réponse avant d\'envoyer.');
+                return;
+              }
+              button.disabled = true;
+              button.textContent = 'Envoi...';
+
+              try {
+                const res = await fetch(`${API_BASE}/${msg.id}/reply`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ reply: replyText }),
+                });
+                if (!res.ok) {
+                  throw new Error('Erreur lors de l\'envoi de la réponse');
+                }
+                // Recharge les messages après réponse
+                await loadMessages();
+                feedback.textContent = 'Réponse enregistrée avec succès.';
+                feedback.className = 'success';
+              } catch (err) {
+                alert(err.message);
+                button.disabled = false;
+                button.textContent = 'Envoyer';
+              }
+            });
+          }
+
+          tbody.appendChild(tr);
+        });
+      } catch (error) {
+        console.error(error);
+        const feedback = document.getElementById('feedback');
+        feedback.textContent = 'Impossible de charger les messages.';
+        feedback.className = 'error';
+      }
+    }
+
+    loadMessages();
+  </script>
+</body>
+</html>

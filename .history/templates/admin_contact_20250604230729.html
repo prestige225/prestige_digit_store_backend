@@ -1,0 +1,134 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin - Gestion des contacts</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  .message-list { max-width: 600px; margin-bottom: 20px; }
+  .message-item { border-bottom: 1px solid #ccc; padding: 10px; cursor: pointer; }
+  .message-item.unread { font-weight: bold; }
+  .message-details { max-width: 600px; margin-top: 20px; }
+  textarea { width: 100%; height: 100px; }
+  button { padding: 10px 15px; margin-top: 10px; }
+  .filter-btn { margin-right: 10px; }
+</style>
+</head>
+<body>
+
+<h1>Administration des messages contacts</h1>
+
+<div>
+  <button class="filter-btn" data-status="">Tous</button>
+  <button class="filter-btn" data-status="unread">Non lus</button>
+  <button class="filter-btn" data-status="read">Lu</button>
+</div>
+
+<div class="message-list" id="messageList">
+  <!-- Messages chargés ici -->
+</div>
+
+<div class="message-details" id="messageDetails" style="display:none;">
+  <h2>Détails du message</h2>
+  <p><strong>Nom :</strong> <span id="detailName"></span></p>
+  <p><strong>Email :</strong> <span id="detailEmail"></span></p>
+  <p><strong>Message :</strong> <br /><pre id="detailMessage"></pre></p>
+  <p><strong>Envoyé le :</strong> <span id="detailCreatedAt"></span></p>
+  <p><strong>Statut :</strong> <span id="detailStatus"></span></p>
+  <p><strong>Réponse :</strong> <br /><pre id="detailResponse"></pre></p>
+  <p><strong>Répondu le :</strong> <span id="detailRespondedAt"></span></p>
+
+  <textarea id="responseText" placeholder="Écrire une réponse..."></textarea><br />
+  <button id="sendResponseBtn">Envoyer la réponse</button>
+</div>
+
+<script>
+const apiBase = 'http://localhost:3000/api/admin';
+
+let selectedMessageId = null;
+
+async function fetchMessages(status = '') {
+  const url = status ? `${apiBase}/contacts?status=${status}` : `${apiBase}/contacts`;
+  const res = await fetch(url);
+  const messages = await res.json();
+
+  const listEl = document.getElementById('messageList');
+  listEl.innerHTML = '';
+  messages.forEach(msg => {
+    const div = document.createElement('div');
+    div.className = 'message-item ' + (msg.status === 'unread' ? 'unread' : '');
+    div.textContent = `${msg.name} - ${msg.email} - ${new Date(msg.created_at).toLocaleString()}`;
+    div.onclick = () => showDetails(msg.id);
+    listEl.appendChild(div);
+  });
+}
+
+async function showDetails(id) {
+  const res = await fetch(`${apiBase}/contacts/${id}`);
+  const msg = await res.json();
+
+  selectedMessageId = id;
+
+  document.getElementById('detailName').textContent = msg.name;
+  document.getElementById('detailEmail').textContent = msg.email;
+  document.getElementById('detailMessage').textContent = msg.message;
+  document.getElementById('detailCreatedAt').textContent = new Date(msg.created_at).toLocaleString();
+  document.getElementById('detailStatus').textContent = msg.status;
+  document.getElementById('detailResponse').textContent = msg.response || '';
+  document.getElementById('detailRespondedAt').textContent = msg.responded_at ? new Date(msg.responded_at).toLocaleString() : '';
+
+  document.getElementById('responseText').value = msg.response || '';
+  document.getElementById('messageDetails').style.display = 'block';
+
+  // Marquer comme lu automatiquement
+  if (msg.status === 'unread') {
+    await fetch(`${apiBase}/contacts/${id}/read`, { method: 'POST' });
+    fetchMessages(); // Refresh la liste pour mise à jour visuelle
+  }
+}
+
+document.getElementById('sendResponseBtn').addEventListener('click', async () => {
+  const responseText = document.getElementById('responseText').value.trim();
+  if (!responseText) {
+    alert("La réponse ne peut pas être vide.");
+    return;
+  }
+
+  if (!selectedMessageId) {
+    alert("Aucun message sélectionné.");
+    return;
+  }
+
+  const res = await fetch(`${apiBase}/contacts/${selectedMessageId}/respond`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ response: responseText }),
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    alert("Réponse envoyée !");
+    showDetails(selectedMessageId); // recharge les détails
+  } else {
+    alert(data.error || "Erreur lors de l'envoi.");
+  }
+});
+
+// Filtres boutons
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const status = btn.getAttribute('data-status');
+    fetchMessages(status);
+  });
+});
+
+// Chargement initial
+fetchMessages();
+</script>
+
+</body>
+</html>
