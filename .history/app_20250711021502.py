@@ -2,31 +2,55 @@
 
 
 
+# from flask import Flask, request, jsonify, session, render_template
+# from flask_mysqldb import MySQL
+# from flask_cors import CORS
+# import MySQLdb.cursors
+# import json  # 👈 utile pour encoder les produits en JSON
+
+# from flask_mail import Mail, Message
+
+# app = Flask(__name__)
+# app.secret_key = 'secret123'  # Clé secrète pour la session
+# CORS(app, supports_credentials=True)
+
+# # Configuration MySQL
+# app.config['MYSQL_HOST'] = 'localhost'
+# app.config['MYSQL_USER'] = 'root'
+# app.config['MYSQL_PASSWORD'] = '12345'
+# app.config['MYSQL_DB'] = 'digit_school_store'
+
+# mysql = MySQL(app)
+
+
+
+import os
 from flask import Flask, request, jsonify, session, render_template
 from flask_mysqldb import MySQL
 from flask_cors import CORS
 import MySQLdb.cursors
-import json  # 👈 utile pour encoder les produits en JSON
-
+import json
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.secret_key = 'secret123'  # Clé secrète pour la session
+app.secret_key = 'secret123'
 CORS(app, supports_credentials=True)
 
-# Configuration MySQL
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_USER'] = 'root'
-app.config['MYSQL_PASSWORD'] = '12345'
-app.config['MYSQL_DB'] = 'digit_school_store'
+# ✅ Connexion MySQL (via variables d’environnement)
+app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
+app.config['MYSQL_USER'] = os.environ.get('DB_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
+app.config['MYSQL_PORT'] = int(os.environ.get('DB_PORT', 3306))  # facultatif mais plus sûr
 
 mysql = MySQL(app)
+
 
 # Configuration de Flask-Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'afanouemile6@gmail.com'      # Remplace par ton email
+app.config['MAIL_USERNAME'] = 'prestigedigitschoolstore@gmail.com'      # Remplace par ton email
 app.config['MAIL_PASSWORD'] = 'keranowzgsywovcb'         # Remplace par ton mot de passe ou un mot de passe d’application
 
 mail = Mail(app)
@@ -211,58 +235,6 @@ import MySQLdb.cursors
 from flask import request, jsonify, session
 import json
 
-# @app.route('/api/commander', methods=['POST'])
-# def commander():
-#     if 'user_id' not in session:
-#         return jsonify({'message': 'Non autorisé'}), 401
-
-#     data = request.get_json()
-#     print("👉 Données reçues :", data)
-
-#     produits = data.get('produits')
-#     total = data.get('total')
-#     nom = data.get('client_nom')
-#     email = data.get('client_email')
-#     telephone = data.get('client_telephone')
-#     methode_paiement = data.get('methode_paiement')
-#     adresse = data.get('client_adress_de_livraison')
-#     user_id = session['user_id']
-
-#     if not produits or not nom or not total:
-#         return jsonify({'message': 'Données incomplètes'}), 400
-
-#     try:
-#         # 🔄 Reformatage des produits pour garantir les bonnes clés
-#         produits_formates = []
-#         for p in produits:
-#             produits_formates.append({
-#                 "nom": p.get("nom") or p.get("name"),
-#                 "quantite": p.get("quantite") or p.get("quantity"),
-#                 "prix": p.get("prix") or p.get("price")
-#             })
-
-#         cursor = mysql.connection.cursor()
-#         cursor.execute("""
-#             INSERT INTO commande (
-#                 produits, total, client_nom, client_email,
-#                 client_telephone, methode_paiement,
-#                 client_adress_de_livraison, user_id
-#             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-#         """, (
-#             json.dumps(produits_formates), total, nom, email,
-#             telephone, methode_paiement, adresse, user_id
-#         ))
-
-#         mysql.connection.commit()
-#         print("✅ Commande enregistrée avec :", produits_formates)
-
-#         return jsonify({'message': 'Commande enregistrée avec succès'}), 201
-
-#     except Exception as e:
-#         print("❌ Erreur lors de l’enregistrement :", e)
-#         return jsonify({'message': 'Erreur serveur'}), 500
-
-
 
 
 
@@ -430,6 +402,10 @@ def track_order(order_id):
 
 
 
+
+
+
+# MESSAGE ENVOYER PAS UTLISATEUR
 @app.route('/api/messages', methods=['POST'])
 def receive_message():
     data = request.get_json()
@@ -443,33 +419,50 @@ def receive_message():
 
     cursor = mysql.connection.cursor()
     try:
+        # Enregistrer dans la BDD
         cursor.execute("""
-            INSERT INTO messages (name, email, message) VALUES (%s, %s, %s)
+            INSERT INTO contacts (name, email, message, sender, created_at, status)
+            VALUES (%s, %s, %s, 'user', NOW(), 'unread')
         """, (name, email, message))
         mysql.connection.commit()
+
+        # ➤ Envoi de l'email à l'admin
+        try:
+            msg = Message(
+                subject=f"Nouveau message de {name}",
+                sender=app.config['MAIL_USERNAME'],
+                recipients=['afanouemile6@gmail.com']
+            )
+            msg.body = f"Nom : {name}\nEmail : {email}\n\nMessage :\n{message}"
+            mail.send(msg)
+        except Exception as e:
+            print("❌ Erreur lors de l'envoi d'email à l'admin :", e)
+
         return jsonify({'message': 'Message reçu, merci !'}), 201
+
     except Exception as e:
-        print("Erreur insertion message :", e)
+        print("❌ Erreur insertion message :", e)
         return jsonify({'message': 'Erreur serveur'}), 500
+
     finally:
         cursor.close()
 
 
 
+# message reçu 
 
 @app.route('/api/messages', methods=['GET'])
-def get_messages():
+def get_all_messages():
     cursor = mysql.connection.cursor()
     try:
-        cursor.execute("SELECT id, name, email, message, reply, created_at FROM messages ORDER BY created_at DESC")
+        cursor.execute("""
+            SELECT id, name, email, message, sender, created_at, status, response, responded_at 
+            FROM contacts
+            ORDER BY created_at DESC
+        """)
         rows = cursor.fetchall()
-
-        # Récupérer les noms de colonnes
         column_names = [desc[0] for desc in cursor.description]
-
-        # Convertir chaque ligne en dictionnaire
         messages = [dict(zip(column_names, row)) for row in rows]
-
         return jsonify(messages), 200
     except Exception as e:
         print("Erreur récupération messages :", e)
@@ -477,59 +470,57 @@ def get_messages():
     finally:
         cursor.close()
 
-
-
 from flask import request, jsonify
 from datetime import datetime
 
+
+
+from datetime import datetime
+from flask import request, jsonify
+
 @app.route('/api/messages/<int:id>/reply', methods=['POST'])
-def reply_message(id):
+def reply_to_message(id):
     data = request.get_json()
     reply = data.get('reply')
 
     if not reply:
         return jsonify({'message': 'Réponse manquante'}), 400
 
-    cursor = mysql.connection.cursor()
     try:
-        # Récupérer l'email et nom de l'expéditeur pour l'envoi du mail
-        cursor.execute("SELECT email, name FROM messages WHERE id = %s", (id,))
+        cursor = mysql.connection.cursor()
+
+        # Vérifier que le message existe dans 'contacts'
+        cursor.execute("SELECT email, name FROM contacts WHERE id = %s", (id,))
         user = cursor.fetchone()
         if not user:
             return jsonify({'message': 'Message non trouvé'}), 404
 
-        email = user[0]
-        name = user[1]
+        email, name = user
 
-        # Mettre à jour la réponse en base
+        # Mettre à jour la réponse
         cursor.execute("""
-            UPDATE messages 
-            SET reply = %s, replied_at = %s 
+            UPDATE contacts
+            SET response = %s, responded_at = %s, status = 'read'
             WHERE id = %s
         """, (reply, datetime.now(), id))
         mysql.connection.commit()
 
-        # Envoyer l'email de notification
-        msg = Message(subject="Réponse à votre message",
-                      sender=app.config['MAIL_USERNAME'],
-                      recipients=[email])
-        msg.body = f"Bonjour {name},\n\nVoici la réponse à votre message :\n\n{reply}\n\nCordialement,\nL'équipe"
-        mail.send(msg)
-
-        return jsonify({'message': 'Réponse enregistrée et email envoyé'}), 200
-    except Exception as e:
-        print("Erreur enregistrement réponse ou envoi email :", e)
-        return jsonify({'message': 'Erreur serveur'}), 500
-    finally:
         cursor.close()
 
+        # Facultatif : envoyer un mail ici si besoin
+
+        return jsonify({'message': 'Réponse enregistrée avec succès'}), 200
+
+    except Exception as e:
+        print("Erreur lors de la réponse :", e)
+        return jsonify({'message': 'Erreur serveur'}), 500
 
 
 @app.route('/api/messages/<int:id>', methods=['DELETE'])
 def delete_message(id):
     cursor = mysql.connection.cursor()
     try:
-        cursor.execute("DELETE FROM messages WHERE id = %s", (id,))
+        cursor.execute("DELETE FROM contacts WHERE id = %s", (id,))
         mysql.connection.commit()
         return jsonify({'message': 'Message supprimé'}), 200
     except Exception as e:
@@ -540,8 +531,187 @@ def delete_message(id):
 
 
 
+# route envoyez message par admin
 
 
-# Lancement du serveur Flask
+
+
+@app.route('/api/messages/send', methods=['POST'])
+def send_message():
+    data = request.get_json()
+
+    name = data.get('name', 'Admin')  # Valeur par défaut : "Admin"
+    email = data.get('email')         # Email du destinataire
+    message = data.get('message')     # Contenu du message
+    sender = data.get('sender', 'admin')  # Par défaut "admin"
+
+    # Vérification des champs obligatoires
+    if not email or not message:
+        return jsonify({'success': False, 'message': 'Champs manquants'}), 400
+
+    try:
+        cursor = mysql.connection.cursor()
+
+        # ➤ Enregistrement dans la base de données
+        cursor.execute("""
+            INSERT INTO contacts (name, email, message, sender, created_at, status)
+            VALUES (%s, %s, %s, %s, NOW(), 'unread')
+        """, (name, email, message, sender))
+        mysql.connection.commit()
+        cursor.close()
+
+        # ➤ Affiche l'email cible pour vérification
+        print("➡️ Envoi de l'email à :", email)
+
+        # ➤ Envoi de l'email avec version texte + HTML
+        msg = Message(
+            subject="Message de l'équipe Prestige Digit School",
+            recipients=[email],
+            sender=app.config.get('MAIL_DEFAULT_SENDER') or app.config['MAIL_USERNAME']
+        )
+        msg.body = f"""Bonjour,
+
+Vous avez reçu un message de l'administration :
+
+{message}
+
+Cordialement,
+L'équipe Prestige Digit School
+"""
+
+        msg.html = f"""
+        <p>Bonjour,</p>
+        <p>Vous avez reçu un message de l'administration :</p>
+        <blockquote style="color:#333;background:#f9f9f9;padding:10px;border-left:4px solid #007BFF;">
+            {message}
+        </blockquote>
+        <p>Cordialement,<br>L'équipe Prestige Digit School</p>
+        """
+
+        # ➤ Envoi du mail
+        try:
+            mail.send(msg)
+            print("✅ Email envoyé avec succès")
+        except Exception as e:
+            print("❌ Erreur lors de l'envoi de l'email :", e)
+
+        return jsonify({'success': True, 'message': 'Message envoyé avec succès.'}), 200
+
+    except Exception as e:
+        print("❌ Erreur lors de l'enregistrement ou de l'envoi :", e)
+        return jsonify({'success': False, 'message': 'Erreur interne du serveur'}), 500
+
+
+
+
+
+# avis pour les produits
+
+
+
+@app.route('/api/avis', methods=['POST'])
+def add_avis():
+    data = request.get_json()
+    nom = data.get('nom')
+    note = data.get('note')
+    commentaire = data.get('commentaire')
+
+    if not nom or not note or not commentaire:
+        return jsonify({'message': 'Champs manquants'}), 400
+
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute("""
+            INSERT INTO avis (nom, note, commentaire, date_post)
+            VALUES (%s, %s, %s, NOW())
+        """, (nom, note, commentaire))
+        mysql.connection.commit()
+        return jsonify({'message': 'Avis ajouté avec succès'}), 201
+    except Exception as e:
+        print("❌ Erreur insertion avis :", e)
+        return jsonify({'message': 'Erreur serveur'}), 500
+    finally:
+        cursor.close()
+
+
+
+
+@app.route('/api/avis', methods=['GET'])
+def get_avis():
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute("SELECT id, nom, note, commentaire, date_post FROM avis ORDER BY date_post DESC")
+        result = cursor.fetchall()
+        avis_list = []
+        for row in result:
+            avis_list.append({
+                'id': row[0],
+                'nom': row[1],
+                'note': row[2],
+                'commentaire': row[3],
+                'date_post': row[4].strftime('%Y-%m-%d %H:%M:%S') if row[4] else None
+            })
+        return jsonify(avis_list), 200
+    except Exception as e:
+        print("❌ Erreur récupération avis :", e)
+        return jsonify({'message': 'Erreur serveur'}), 500
+    finally:
+        cursor.close()
+
+
+# Route pour récupérer les avis d'un produit spécifique
+
+
+@app.route('/api/avis/produit/<int:product_id>', methods=['GET'])
+def get_avis_par_produit(product_id):
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute("SELECT id, nom, note, commentaire, date_post FROM avis WHERE product_id = %s ORDER BY date_post DESC", (product_id,))
+        rows = cursor.fetchall()
+        avis_list = []
+        for row in rows:
+            avis_list.append({
+                'id': row[0],
+                'nom': row[1],
+                'note': row[2],
+                'commentaire': row[3],
+                'date_post': row[4].strftime('%Y-%m-%d %H:%M:%S')
+            })
+        return jsonify(avis_list), 200
+    except Exception as e:
+        print("❌ Erreur:", e)
+        return jsonify({'message': 'Erreur serveur'}), 500
+    finally:
+        cursor.close()
+
+
+
+
+# Route pour supprimer un avis
+@app.route('/api/avis/<int:avis_id>', methods=['DELETE'])
+def delete_avis(avis_id):
+    cursor = mysql.connection.cursor()
+    try:
+        cursor.execute("DELETE FROM avis WHERE id = %s", (avis_id,))
+        mysql.connection.commit()
+        if cursor.rowcount == 0:
+            return jsonify({'message': 'Avis non trouvé'}), 404
+        return jsonify({'message': 'Avis supprimé'}), 200
+    except Exception as e:
+        print("❌ Erreur suppression avis :", e)
+        return jsonify({'message': 'Erreur serveur'}), 500
+    finally:
+        cursor.close()
+
+
+# # Lancement du serveur Flask
+# if __name__ == "__main__":
+#     app.run(host='127.0.0.1', port=3000, debug=True)
+
+
+
+import os
+
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=3000, debug=True)
+    port = int(os.environ.get("PORT", 3000))  # Prend le PORT depuis la variable d'environnement, sinon 3000 par défaut
+    app.run(host="0.0.0.0", port=port, debug=True)

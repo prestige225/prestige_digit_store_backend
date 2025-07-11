@@ -1,10 +1,10 @@
 
 services:
   - type: web
-    name: prestige-digit-backend
+    name: prestige-digit-store-backend
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
+    buildCommand: "pip install -r requirements.txt"  # Indique toujours l'installation des dépendances
+    startCommand: python app.py
     envVars:
       - key: MYSQL_HOST
         value: b3boiqle4acevw9dwxnj-mysql.services.clever-cloud.com

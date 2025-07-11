@@ -704,6 +704,14 @@ def delete_avis(avis_id):
         cursor.close()
 
 
-# Lancement du serveur Flask
+# # Lancement du serveur Flask
+# if __name__ == "__main__":
+#     app.run(host='127.0.0.1', port=3000, debug=True)
+
+
+
+import os
+
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=3000, debug=True)
+    port = int(os.environ.get("PORT", 3000))  # Prend le PORT depuis la variable d'environnement, sinon 3000 par défaut
+    app.run(host="0.0.0.0", port=port, debug=True)
