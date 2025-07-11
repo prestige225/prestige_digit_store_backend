@@ -21,8 +21,6 @@
 # app.config['MYSQL_DB'] = 'digit_school_store'
 
 # mysql = MySQL(app)
-print("🔍 MYSQL_HOST =", os.environ.get('MYSQL_HOST'))
-print("🔍 MYSQL_PORT =", os.environ.get('MYSQL_PORT'))
 
 
 
@@ -33,14 +31,14 @@ from flask_cors import CORS
 import MySQLdb.cursors
 import json
 from flask_mail import Mail, Message
-from flask import Flask
 
 app = Flask(__name__)
 app.secret_key = 'secret123'
 CORS(app, supports_credentials=True)
 
-
-
+import os
+from flask import Flask
+from flask_mysqldb import MySQL
 
 app = Flask(__name__)
 
