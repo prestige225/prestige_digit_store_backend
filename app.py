@@ -36,14 +36,18 @@ app = Flask(__name__)
 app.secret_key = 'secret123'
 CORS(app, supports_credentials=True)
 
-# ✅ Connexion MySQL (via variables d’environnement)
-app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
-app.config['MYSQL_USER'] = os.environ.get('DB_USER')
-app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
-app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
-app.config['MYSQL_PORT'] = int(os.environ.get('DB_PORT', 3306))  # facultatif mais plus sûr
+import os
+from flask_mysqldb import MySQL
+
+# Configuration MySQL avec variables d'environnement
+app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
+app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))  # Port MySQL par défaut
 
 mysql = MySQL(app)
+
 
 
 # Configuration de Flask-Mail
@@ -708,6 +712,13 @@ def delete_avis(avis_id):
 # if __name__ == "__main__":
 #     app.run(host='127.0.0.1', port=3000, debug=True)
 
+
+# Affiche toutes les routes de l'app Flask au démarrage
+with app.app_context():
+    print("\n=== Liste des routes disponibles ===")
+    for rule in app.url_map.iter_rules():
+        methods = ','.join(rule.methods)
+        print(f"{rule.endpoint}: {rule.rule} [{methods}]")
 
 
 import os
