@@ -36,18 +36,14 @@ app = Flask(__name__)
 app.secret_key = 'secret123'
 CORS(app, supports_credentials=True)
 
-import os
-from flask_mysqldb import MySQL
-
-# Configuration MySQL avec variables d'environnement
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
-app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
+# ✅ Connexion MySQL (via variables d’environnement)
+app.config['MYSQL_HOST'] = os.environ.get('DB_HOST')
+app.config['MYSQL_USER'] = os.environ.get('DB_USER')
+app.config['MYSQL_PASSWORD'] = os.environ.get('DB_PASSWORD')
+app.config['MYSQL_DB'] = os.environ.get('DB_NAME')
+app.config['MYSQL_PORT'] = int(os.environ.get('DB_PORT', 3306))  # facultatif mais plus sûr
 
 mysql = MySQL(app)
-
 
 
 # Configuration de Flask-Mail
@@ -723,12 +719,6 @@ with app.app_context():
 
 import os
 
-# if __name__ == "__main__":
-#     port = int(os.environ.get("PORT", 3000))  # Prend le PORT depuis la variable d'environnement, sinon 3000 par défaut
-#     app.run(host="0.0.0.0", port=port, debug=True)
-
-
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 3000))
+    port = int(os.environ.get("PORT", 3000))  # Prend le PORT depuis la variable d'environnement, sinon 3000 par défaut
     app.run(host="0.0.0.0", port=port, debug=True)
