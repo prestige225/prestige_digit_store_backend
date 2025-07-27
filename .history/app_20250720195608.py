@@ -15,21 +15,11 @@ app.secret_key = 'secret123'  # Clé secrète pour la session
 CORS(app, supports_credentials=True)
 
 # Configuration MySQL
-# app.config['MYSQL_HOST'] = 'localhost'
-# app.config['MYSQL_USER'] = 'root'
-# app.config['MYSQL_PASSWORD'] = '12345'
-# app.config['MYSQL_DB'] = 'digit_school_store'
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = '12345'
+app.config['MYSQL_DB'] = 'digit_school_store'
 
-
-import os
-
-import os
-
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'localhost')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', '')
-app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
 
 mysql = MySQL(app)
 
@@ -690,10 +680,29 @@ def delete_avis(avis_id):
         cursor.close()
 
 
-# Lancement du serveur Flask
+# # Lancement du serveur Flask
+# if __name__ == "__main__":
+#     app.run(host='127.0.0.1', port=3000, debug=True)
 
-   # Lancement du serveur en local avec waitress (facultatif, utile pour tester)
+
+# Affiche toutes les routes de l'app Flask au démarrage
+with app.app_context():
+    print("\n=== Liste des routes disponibles ===")
+    for rule in app.url_map.iter_rules():
+        methods = ','.join(rule.methods)
+        print(f"{rule.endpoint}: {rule.rule} [{methods}]")
+
+
+
+@app.route('/api/test')
+def test():
+    try:
+        cursor = mysql.connection.cursor()
+        cursor.execute("SELECT 1")
+        return jsonify({'message': 'Connexion MySQL réussie'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=3000)
-
+    port = int(os.environ.get("PORT", 3000))
+    app.run(host="0.0.0.0", port=port)

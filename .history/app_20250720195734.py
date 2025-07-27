@@ -15,21 +15,11 @@ app.secret_key = 'secret123'  # Clé secrète pour la session
 CORS(app, supports_credentials=True)
 
 # Configuration MySQL
-# app.config['MYSQL_HOST'] = 'localhost'
-# app.config['MYSQL_USER'] = 'root'
-# app.config['MYSQL_PASSWORD'] = '12345'
-# app.config['MYSQL_DB'] = 'digit_school_store'
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = '12345'
+app.config['MYSQL_DB'] = 'digit_school_store'
 
-
-import os
-
-import os
-
-app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', 'localhost')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', '')
-app.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
 
 mysql = MySQL(app)
 
@@ -691,9 +681,7 @@ def delete_avis(avis_id):
 
 
 # Lancement du serveur Flask
-
-   # Lancement du serveur en local avec waitress (facultatif, utile pour tester)
 if __name__ == "__main__":
-    from waitress import serve
-    serve(app, host="0.0.0.0", port=3000)
+    app.run(host='127.0.0.1', port=3000, debug=True)
+
 
